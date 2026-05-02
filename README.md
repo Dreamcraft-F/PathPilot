@@ -30,7 +30,7 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/<用户名>/PathPilot.git
+git clone https://github.com/Dreamcraft-F/PathPilot.git
 cd PathPilot
 
 # 创建环境
@@ -46,7 +46,7 @@ python src/main.py
 
 ### 使用打包版本
 
-从 [Releases](https://github.com/<用户名>/PathPilot/releases) 下载最新版本，解压后运行 `PathPilot.exe`。
+从 [Releases](https://github.com/Dreamcraft-F/PathPilot/releases) 下载最新版本，解压后运行 `PathPilot.exe`。
 
 ## 技术栈
 
