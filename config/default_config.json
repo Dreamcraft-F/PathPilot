@@ -1,0 +1,43 @@
+{
+  "version": "1.0.0",
+  "general": {
+    "enable_logging": true,
+    "log_level": "INFO",
+    "database_path": "data/pathpilot.db",
+    "backup_enabled": true,
+    "backup_interval": 86400,
+    "autostart_enabled": true
+  },
+  "engine": {
+    "min停留时间": 2000,
+    "max路径深度": 10,
+    "时间去重窗口": 5000,
+    "最大历史记录": 10000
+  },
+  "gui": {
+    "悬浮球大小": 32,
+    "悬浮球透明度": 0.8
+  },
+  "filters": {
+    "excluded_paths": [
+      "C:\\Windows\\*",
+      "C:\\Program Files\\*",
+      "C:\\Program Files (x86)\\*",
+      "C:\\$Recycle.Bin",
+      "C:\\System Volume Information"
+    ],
+    "excluded_patterns": [
+      "^.*\\.tmp$",
+      "^.*\\.temp$",
+      "^.*~$"
+    ]
+  },
+  "importance": {
+    "weights": {
+      "time": 0.4,
+      "frequency": 0.3,
+      "depth": 0.3
+    },
+    "favorite_bonus": 100
+  }
+}
