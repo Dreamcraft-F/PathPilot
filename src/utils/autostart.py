@@ -124,13 +124,16 @@ class AutoStartManager:
             可执行文件路径（打包模式下为exe路径，开发模式下为python+脚本路径）
         """
         # 检测是否为 Nuitka 打包后的 exe
-        # Nuitka standalone 在 __main__ 模块上设置 __compiled__ 属性
         import __main__
-        is_nuitka = hasattr(__main__, '__compiled__')
-        
-        if is_nuitka:
-            # Nuitka standalone: sys.argv[0] 是 exe 的真实路径
-            return os.path.abspath(sys.argv[0])
+        if hasattr(__main__, '__compiled__'):
+            # 用 Windows API 获取 exe 真实路径（不依赖 sys.argv[0]）
+            try:
+                import ctypes
+                buf = ctypes.create_unicode_buffer(512)
+                ctypes.windll.kernel32.GetModuleFileNameW(None, buf, 512)
+                return os.path.abspath(buf.value)
+            except Exception:
+                return os.path.abspath(sys.argv[0])
         
         # 开发模式：返回 python 解释器 + 脚本路径
         exe = sys.executable

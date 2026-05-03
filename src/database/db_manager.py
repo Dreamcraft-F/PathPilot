@@ -249,6 +249,31 @@ class DatabaseManager:
                 WHERE id = ?
             """, (record_id,))
             self.connection.commit()
+            
+    def delete_paths_by_prefix(self, path_prefix: str):
+        """
+        级联删除：软删除指定路径及其所有子路径
+        
+        Args:
+            path_prefix: 路径前缀（如 "C:/Users" 会同时删除 "C:/Users/Documents" 等）
+        """
+        if not self.connection:
+            return
+            
+        # 规范化前缀，确保匹配以 \ 开头的子路径
+        normalized = path_prefix.lower().rstrip('\\')
+        prefix_pattern = normalized + '%'
+        
+        with self._lock:
+            cursor = self.connection.cursor()
+            cursor.execute("""
+                UPDATE path_records 
+                SET status = 'deleted', updated_at = CURRENT_TIMESTAMP
+                WHERE status = 'active' AND (
+                    LOWER(path) = ? OR LOWER(path) LIKE ?
+                )
+            """, (normalized, prefix_pattern))
+            self.connection.commit()
         
     def toggle_favorite(self, record_id: str):
         """
