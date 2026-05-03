@@ -368,16 +368,29 @@ class PathPilotApp(QObject):
             
     def delete_path(self, record_id: str):
         """
-        删除路径记录
+        删除路径记录（级联：同时删除所有子路径）
         
         Args:
             record_id: 记录ID
         """
-        self.path_engine.delete_path(record_id)
-        self.logger.info(f"删除路径记录: {record_id}")
-        
-        # 立即刷新所有视图
-        self.refresh_all_views()
+        try:
+            # 先获取记录，拿到完整路径
+            record = self.database_manager.get_path_record_by_id(record_id)
+            if not record:
+                self.logger.warning(f"删除失败，记录不存在: {record_id}")
+                return
+            
+            # 级联删除：该路径及其所有子路径
+            self.database_manager.delete_paths_by_prefix(record.path)
+            self.logger.info(f"级联删除路径: {record.path}")
+            
+            # 重置去重器中可能残留的状态
+            self.path_engine.deduplicator.reset()
+            
+            # 立即刷新所有视图
+            self.refresh_all_views()
+        except Exception as e:
+            self.logger.error(f"删除路径失败: {e}")
         
     def toggle_favorite(self, record_id: str, is_favorite: bool):
         """
