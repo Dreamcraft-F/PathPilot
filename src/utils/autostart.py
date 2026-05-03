@@ -48,6 +48,9 @@ class AutoStartManager:
         try:
             exe_path = self._get_exe_path()
             
+            # 清理可能残留的注册表项（防止旧版本遗留导致双实例）
+            self._cleanup_registry()
+            
             # 先删除旧快捷方式，确保干净创建
             if os.path.exists(self._shortcut_path):
                 os.remove(self._shortcut_path)
@@ -100,6 +103,24 @@ class AutoStartManager:
         except Exception as e:
             self._log("error", f"禁用开机自启动失败: {e}")
             return False
+            
+    def _cleanup_registry(self):
+        """清理注册表中可能残留的自启动项（防止旧版本遗留导致双实例）"""
+        try:
+            import winreg
+            key = winreg.OpenKey(
+                winreg.HKEY_CURRENT_USER,
+                r"Software\Microsoft\Windows\CurrentVersion\Run",
+                0, winreg.KEY_SET_VALUE
+            )
+            try:
+                winreg.DeleteValue(key, self.APP_NAME)
+                self._log("info", "已清理注册表自启动残留")
+            except FileNotFoundError:
+                pass  # 不存在，无需清理
+            winreg.CloseKey(key)
+        except Exception as e:
+            self._log("debug", f"清理注册表跳过: {e}")
             
     def toggle(self, enable: bool) -> bool:
         """

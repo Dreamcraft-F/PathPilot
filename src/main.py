@@ -39,6 +39,10 @@ def _get_base_dir() -> str:
 BASE_DIR = _get_base_dir()
 sys.path.insert(0, BASE_DIR)
 
+# 切换工作目录到 exe 所在目录，确保所有相对路径（data/config/logs）
+# 都写入到 exe 旁边，实现绿色便携
+os.chdir(BASE_DIR)
+
 
 def is_first_run() -> bool:
     """检测是否是首次运行"""
