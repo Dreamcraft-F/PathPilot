@@ -566,6 +566,13 @@ class PathPilotApp(QObject):
         if self.database_manager:
             self.database_manager.close()
             
+        # 隐藏所有GUI组件
+        if self.floating_ball:
+            self.floating_ball.hide()
+            
+        if self.main_window:
+            self.main_window.hide()
+            
         # 隐藏托盘图标
         if self.tray_icon:
             self.tray_icon.hide()

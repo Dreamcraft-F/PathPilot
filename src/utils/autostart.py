@@ -48,12 +48,33 @@ class AutoStartManager:
         try:
             exe_path = self._get_exe_path()
             
+            # 先删除旧快捷方式，确保干净创建
+            if os.path.exists(self._shortcut_path):
+                os.remove(self._shortcut_path)
+            
             # 创建快捷方式
             pythoncom.CoInitialize()
             shell = Dispatch('WScript.Shell')
             shortcut = shell.CreateShortCut(self._shortcut_path)
-            shortcut.TargetPath = exe_path
-            shortcut.WorkingDirectory = os.path.dirname(exe_path.strip('"'))
+            
+            # 处理路径（开发模式下可能包含引号和参数）
+            if '"' in exe_path:
+                import shlex
+                try:
+                    parts = shlex.split(exe_path)
+                    shortcut.TargetPath = parts[0]
+                    if len(parts) > 1:
+                        shortcut.Arguments = ' '.join(parts[1:])
+                except ValueError:
+                    shortcut.TargetPath = exe_path.strip('"')
+            else:
+                shortcut.TargetPath = exe_path
+            
+            # 设置工作目录
+            target_dir = os.path.dirname(shortcut.TargetPath)
+            if target_dir:
+                shortcut.WorkingDirectory = target_dir
+            
             shortcut.Description = self.APP_NAME
             shortcut.save()
             
@@ -97,9 +118,26 @@ class AutoStartManager:
             
     def _get_exe_path(self) -> str:
         """
-        获取可执行文件路径（不带引号）
+        获取可执行文件路径
         
         Returns:
-            可执行文件路径
+            可执行文件路径（打包模式下为exe路径，开发模式下为python+脚本路径）
         """
-        return sys.executable
+        # 检测是否为 Nuitka 打包后的 exe
+        # Nuitka standalone 在 __main__ 模块上设置 __compiled__ 属性
+        import __main__
+        is_nuitka = hasattr(__main__, '__compiled__')
+        
+        if is_nuitka:
+            # Nuitka standalone: sys.argv[0] 是 exe 的真实路径
+            return os.path.abspath(sys.argv[0])
+        
+        # 开发模式：返回 python 解释器 + 脚本路径
+        exe = sys.executable
+        main_script = os.path.normpath(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'main.py')
+        )
+        if os.path.exists(main_script):
+            return f'"{exe}" "{main_script}"'
+        
+        return exe
