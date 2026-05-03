@@ -7,36 +7,13 @@ PathPilot 主程序入口
 import sys
 import os
 
+# 确定基础目录
+if hasattr(sys, '_MEIPASS'):
+    BASE_DIR = sys._MEIPASS
+else:
+    # 使用 sys.argv[0] 获取 exe 所在目录
+    BASE_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
 
-def _get_base_dir() -> str:
-    """
-    获取基础目录（稳健检测，兼容各种启动方式）
-    
-    优先级:
-    1. PyInstaller (sys._MEIPASS)
-    2. Nuitka (__compiled__ + GetModuleFileNameW)
-    3. 回退: sys.argv[0]
-    """
-    # PyInstaller
-    if hasattr(sys, '_MEIPASS'):
-        return sys._MEIPASS
-
-    # Nuitka standalone: 用 Windows API 获取 exe 真实路径
-    import __main__
-    if hasattr(__main__, '__compiled__'):
-        try:
-            import ctypes
-            buf = ctypes.create_unicode_buffer(512)
-            ctypes.windll.kernel32.GetModuleFileNameW(None, buf, 512)
-            return os.path.dirname(os.path.abspath(buf.value))
-        except Exception:
-            pass
-
-    # 回退
-    return os.path.dirname(os.path.abspath(sys.argv[0]))
-
-
-BASE_DIR = _get_base_dir()
 sys.path.insert(0, BASE_DIR)
 
 
